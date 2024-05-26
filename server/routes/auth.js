@@ -69,7 +69,7 @@ router.get('/slack/oauth_redirect', async (req, res) => {
 
     req.session.slackAccessToken = access_token;
 
-    res.redirect('/');
+    res.redirect(process.env.CLIENT_URL);
   } catch (error) {
     console.error('Error during Slack OAuth:', error);
     res.status(500).send('Error during Slack OAuth');

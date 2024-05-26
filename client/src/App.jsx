@@ -5,6 +5,7 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [channels, setChannels] = useState([]);
   const [selectedChannels, setSelectedChannels] = useState([]);
+  const [slackConneceted,setSlackConnected]=useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -14,6 +15,7 @@ const App = () => {
         });
         console.log(response);
         setUser(response.data.user);
+        setSlackConnected(response.data.isSlackConnected);
       } catch (err) {
         console.log("Not Logged in");
       }
@@ -68,9 +70,11 @@ const App = () => {
             <a href="http://localhost:3000/logout" >
               <button className='p-2 rounded-lg border bg-white hover:bg-red-100'>Logout</button>
             </a>
-            <a href="http://localhost:3000/slack/oauth" >
+            {!slackConneceted && (
+              <a href="http://localhost:3000/slack/oauth" >
               <button className='p-2 rounded-lg border bg-white hover:bg-yellow-100'>Connect with Slack</button>
             </a>
+            )}
           </div>
           <div className='flex gap-4'>
             <img src={user.image || "./vite.svg"} />

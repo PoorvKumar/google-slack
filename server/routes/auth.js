@@ -4,6 +4,8 @@ const axios=require("axios");
 
 const passport = require("passport");
 
+const { WebClient } = require('@slack/web-api');
+
 router.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
@@ -18,8 +20,10 @@ router.get(
 
 router.get("/login/success", (req, res, next) => {
   if (req.user) {
+    const isSlackConnected = !!req.session.slackAccessToken;
     return res.status(200).json({
       user: req.user,
+      isSlackConnected,
       message: "Logged in Successfully",
     });
   }
@@ -76,23 +80,46 @@ router.get('/slack/oauth_redirect', async (req, res) => {
   }
 });
 
-router.get('/slack/user-data', async (req, res) => {
-  const accessToken = req.session.slackAccessToken;
-
-  if (!accessToken) {
-    return res.status(401).send('Unauthorized');
-  }
-
-  const slackClient = new WebClient(accessToken);
-
+router.get('/slack/channels', async (req, res) => {
   try {
-    const user = await slackClient.users.info();
+    const slackClient = new WebClient(req.session.slackAccessToken);
     const channels = await slackClient.conversations.list({ types: 'public_channel' });
 
-    res.json({ user: user.user, channels: channels.channels });
+    res.json({ channels: channels.channels });
   } catch (error) {
-    console.error('Error fetching user data and channels:', error);
-    res.status(500).send('Error fetching user data and channels');
+    console.error('Error fetching channels:', error);
+    res.status(500).json({ error: 'Failed to fetch channels' });
+  }
+});
+
+router.post('/slack/send-user-details', async (req, res) => {
+  const { channelIds } = req.body;
+
+  if (!channelIds || !Array.isArray(channelIds) || channelIds.length === 0) {
+    return res.status(400).json({ error: 'Invalid channel IDs provided' });
+  }
+
+  try {
+    const slackClient = new WebClient(req.session.slackAccessToken);
+    const user = await slackClient.users.info();
+
+    const userDetails = {
+      displayName: user.user.profile.real_name || user.user.name,
+      email: user.user.profile.email,
+      image: user.user.profile.image_original || null,
+    };
+
+    for (const channelId of channelIds) {
+      await slackClient.chat.postMessage({
+        channel: channelId,
+        text: `User Details:\n${JSON.stringify(userDetails, null, 2)}`,
+      });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error sending user details to channels:', error);
+    res.status(500).json({ error: 'Failed to send user details' });
   }
 });
 

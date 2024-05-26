@@ -34,7 +34,7 @@ const App = () => {
       }
     };
     if (user) {
-      fetchChannels();
+      // fetchChannels();
     }
   }, [user]);
 

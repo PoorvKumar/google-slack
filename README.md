@@ -23,3 +23,6 @@ Backend and frontend implementation for login with Google OAuth using passport.j
 - To login with Gmail, you can click on the 'Login with Google' button which will redirect to the google login
 - To connect to slack account, click on 'Connect Slack Account' button which will redirect to slack 
 
+## Video
+![ezgif-5-6698f3b23a](https://github.com/PoorvKumar/google-slack/assets/55318092/55cfa900-d510-4b8e-86d8-8c7c4e321dc9)
+
